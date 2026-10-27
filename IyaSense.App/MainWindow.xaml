@@ -5,8 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:IyaSense.App"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="IyaSense" Height="600" Width="900" WindowStartupLocation="CenterScreen" FontFamily="Courier New">
     <Grid>
-
+        <StackPanel Margin="30">
+            <TextBlock Text="IyaSense" FontSize="32" FontWeight="Bold" />
+            <TextBlock Text="Plant Monitoring System" FontSize="16" Margin="0,5,0,30"/>
+            <Button Content="Connect" Width="120" Height="40" HorizontalAlignment="Left" Click="Button_Click"/>
+            <TextBlock Text="{Binding ConnectionStatusText}" FontSize="16" Margin="0,10,0,0"/>
+        </StackPanel>
     </Grid>
 </Window>
