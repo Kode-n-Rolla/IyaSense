@@ -7,6 +7,7 @@ using System.Windows.Input;
 namespace IyaSense.App.ViewModels {
     public class MainViewModel : INotifyPropertyChanged {
         private string _connectionStatusText = "Status: Disconnected";
+        private string _lastMessage = "No messages received";
         private readonly MqttService _mqttService;
 
         public string ConnectionStatusText {
@@ -18,6 +19,18 @@ namespace IyaSense.App.ViewModels {
 
                 _connectionStatusText = value;
                 OnPropertyChanged(nameof(ConnectionStatusText));
+            }
+        }
+
+        public string LastMessage {
+            get => _lastMessage;
+            set {
+                if (_lastMessage == value) {
+                    return;
+                }
+
+                _lastMessage = value;
+                OnPropertyChanged(nameof(LastMessage));
             }
         }
 
@@ -56,7 +69,9 @@ namespace IyaSense.App.ViewModels {
         }
 
         private void OnMessageReceived(string message) {
-            System.Diagnostics.Debug.WriteLine($"ViewModel received: {message}");
+            Application.Current.Dispatcher.BeginInvoke(() => {
+                LastMessage = message;
+            });
         }
     }
 }
