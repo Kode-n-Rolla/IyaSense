@@ -28,6 +28,7 @@ namespace IyaSense.App.ViewModels {
         public MainViewModel() {
             ConnectCommand = new AsyncRelayCommand(Connect);
             _mqttService = new MqttService();
+            _mqttService.MessageReceived += OnMessageReceived;
         }
 
         private void OnPropertyChanged(string propertyName) {
@@ -39,6 +40,7 @@ namespace IyaSense.App.ViewModels {
 
             try {
                 await _mqttService.ConnectAsync();
+                await _mqttService.SubscribeAsync();
 
                 if (_mqttService.IsConnected) {
                     ConnectionStatusText = "Status: Connected";
@@ -51,6 +53,10 @@ namespace IyaSense.App.ViewModels {
                 System.Diagnostics.Debug.WriteLine($"MQTT connection failed: {ex.Message}");
             }
 
+        }
+
+        private void OnMessageReceived(string message) {
+            System.Diagnostics.Debug.WriteLine($"ViewModel received: {message}");
         }
     }
 }

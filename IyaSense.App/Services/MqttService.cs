@@ -5,10 +5,13 @@ namespace IyaSense.App.Services {
         private readonly IMqttClient _client;
 
         public bool IsConnected => _client.IsConnected;
+        public event Action<string>? MessageReceived;
 
         public MqttService() {
             var factory = new MqttClientFactory();
             _client = factory.CreateMqttClient();
+
+            _client.ApplicationMessageReceivedAsync += OnMessageReceived;
         }
 
         public async Task ConnectAsync() {
@@ -18,6 +21,29 @@ namespace IyaSense.App.Services {
                     .Build();
 
             await _client.ConnectAsync(options);
+        }
+
+        public async Task SubscribeAsync() {
+            var factory = new MqttClientFactory();
+
+            var options = factory
+                    .CreateSubscribeOptionsBuilder()
+                    .WithTopicFilter("growcare/my-id-12345/telemetry")
+                    .Build();
+
+            await _client.SubscribeAsync(options);
+
+            System.Diagnostics.Debug.WriteLine("MQTT subscribed!");
+        }
+
+        private Task OnMessageReceived(MqttApplicationMessageReceivedEventArgs e) {
+            string message = e.ApplicationMessage.ConvertPayloadToString();
+
+            MessageReceived?.Invoke(message);
+
+            System.Diagnostics.Debug.WriteLine($"MQTT received: {message}");
+
+            return Task.CompletedTask;
         }
     }
 }
