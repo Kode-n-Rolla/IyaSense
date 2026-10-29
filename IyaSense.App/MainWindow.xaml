@@ -14,6 +14,7 @@
             <TextBlock Text="{Binding ConnectionStatusText}" FontSize="16" Margin="0,10,0,0"/>
             <TextBlock Text="{Binding Temperature, StringFormat='Temperature: {0:F1} °C'}" FontSize="16" Margin="0,10,0,0"/>
             <TextBlock Text="{Binding Humidity, StringFormat='Humidity: {0:F1}%'}" FontSize="16" Margin="0,10,0,0"/>
+            <TextBlock Text="{Binding SoilMoisture, StringFormat='SoilMoisture: {0}%'}" FontSize="16" Margin="0,10,0,0"/>
         </StackPanel>
     </Grid>
 </Window>

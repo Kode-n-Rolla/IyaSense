@@ -13,6 +13,7 @@ namespace IyaSense.App.ViewModels {
         private string _lastMessage = "No messages received";
         private float _temperature;
         private float _humidity;
+        private int _soilMoisture;
         private readonly MqttService _mqttService;
 
         public string ConnectionStatusText {
@@ -64,6 +65,17 @@ namespace IyaSense.App.ViewModels {
             }
         }
 
+        public int SoilMoisture {
+            get => _soilMoisture;
+            set {
+                if (_soilMoisture == value) {
+                    return;
+                }
+
+                _soilMoisture = value;
+                OnPropertyChanged(nameof(SoilMoisture));
+            }
+        }
 
         public ICommand ConnectCommand { get; }
 
@@ -113,6 +125,7 @@ namespace IyaSense.App.ViewModels {
                     Application.Current.Dispatcher.BeginInvoke(() => {
                         Temperature = data.Temperature;
                         Humidity = data.Humidity;
+                        SoilMoisture = data.SoilMoisture;
                     });
                 }
             } catch (JsonException ex) {
