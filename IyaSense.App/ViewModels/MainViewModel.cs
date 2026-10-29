@@ -1,6 +1,9 @@
 ﻿using IyaSense.App.Commands;
+using IyaSense.App.Models;
 using IyaSense.App.Services;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
 
@@ -8,6 +11,8 @@ namespace IyaSense.App.ViewModels {
     public class MainViewModel : INotifyPropertyChanged {
         private string _connectionStatusText = "Status: Disconnected";
         private string _lastMessage = "No messages received";
+        private float _temperature;
+        private float _humidity;
         private readonly MqttService _mqttService;
 
         public string ConnectionStatusText {
@@ -33,6 +38,32 @@ namespace IyaSense.App.ViewModels {
                 OnPropertyChanged(nameof(LastMessage));
             }
         }
+
+        public float Temperature {
+            get => _temperature;
+            set {
+                if (_temperature == value) {
+                    return;
+                }
+
+                _temperature = value;
+                OnPropertyChanged(nameof(Temperature));
+            }
+        }
+
+
+        public float Humidity {
+            get => _humidity;
+            set {
+                if (_humidity == value) {
+                    return;
+                }
+
+                _humidity = value;
+                OnPropertyChanged(nameof(Humidity));
+            }
+        }
+
 
         public ICommand ConnectCommand { get; }
 
@@ -69,9 +100,25 @@ namespace IyaSense.App.ViewModels {
         }
 
         private void OnMessageReceived(string message) {
-            Application.Current.Dispatcher.BeginInvoke(() => {
-                LastMessage = message;
-            });
+            //Application.Current.Dispatcher.BeginInvoke(() => {
+            //    LastMessage = message;
+            //});
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            try {
+                var data = JsonSerializer.Deserialize<SensorData>(message, options);
+
+                if (data != null) {
+                    Debug.WriteLine($"Temp: {data.Temperature}, Hum: {data.Humidity}");
+                    Application.Current.Dispatcher.BeginInvoke(() => {
+                        Temperature = data.Temperature;
+                        Humidity = data.Humidity;
+                    });
+                }
+            } catch (JsonException ex) {
+                Debug.WriteLine($"Invalid JSON: {ex.Message}");
+            }
+
         }
     }
 }
