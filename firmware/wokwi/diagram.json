@@ -3,25 +3,105 @@
   "author": "Anonymous maker",
   "editor": "wokwi",
   "parts": [
-    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 134.4, "left": 283.24, "attrs": {} },
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 134.4,
+      "left": 283.24,
+      "attrs": {}
+    },
     {
       "type": "wokwi-dht22",
       "id": "dht1",
-      "top": 29.1,
-      "left": 205.8,
-      "attrs": { "temperature": "56.4", "humidity": "54.5" }
+      "top": 9.9,
+      "left": 215.4,
+      "attrs": {
+        "temperature": "56.4",
+        "humidity": "54.5"
+      }
     },
-    { "type": "wokwi-potentiometer", "id": "pot1", "top": 37.1, "left": 403, "attrs": {} }
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot1",
+      "top": 27.5,
+      "left": 403,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay1",
+      "top": 374.6,
+      "left": 307.2,
+      "attrs": {}
+    }
   ],
   "connections": [
-    [ "esp:TX", "$serialMonitor:RX", "", [] ],
-    [ "esp:RX", "$serialMonitor:TX", "", [] ],
-    [ "dht1:VCC", "esp:3V3", "red", [ "v0" ] ],
-    [ "dht1:GND", "esp:GND.1", "black", [ "v0" ] ],
-    [ "dht1:SDA", "esp:15", "green", [ "v0" ] ],
-    [ "pot1:VCC", "esp:3V3", "red", [ "v0" ] ],
-    [ "pot1:GND", "esp:GND.3", "black", [ "v0" ] ],
-    [ "pot1:SIG", "esp:34", "green", [ "v0" ] ]
+    [
+      "esp:TX",
+      "$serialMonitor:RX",
+      "",
+      []
+    ],
+    [
+      "esp:RX",
+      "$serialMonitor:TX",
+      "",
+      []
+    ],
+    [
+      "dht1:VCC",
+      "esp:3V3",
+      "red",
+      [ "v0" ]
+    ],
+    [
+      "dht1:GND",
+      "esp:GND.1",
+      "black",
+      [ "v0" ]
+    ],
+    [
+      "dht1:SDA",
+      "esp:15",
+      "green",
+      [ "v0" ]
+    ],
+    [
+      "pot1:VCC",
+      "esp:3V3",
+      "red",
+      [ "v0" ]
+    ],
+    [
+      "pot1:GND",
+      "esp:GND.3",
+      "black",
+      [ "v0" ]
+    ],
+    [
+      "pot1:SIG",
+      "esp:34",
+      "green",
+      [ "v0" ]
+    ],
+    [
+      "relay1:VCC",
+      "esp:3V3",
+      "red",
+      [ "h0" ]
+    ],
+    [
+      "relay1:GND",
+      "esp:GND.1",
+      "black",
+      [ "h0" ]
+    ],
+    [
+      "esp:26",
+      "relay1:IN",
+      "green",
+      [ "h0" ]
+    ]
   ],
   "dependencies": {}
 }
