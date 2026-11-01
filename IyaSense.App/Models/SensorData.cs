@@ -5,5 +5,6 @@
         public int SoilMoisture { get; set; }
         public bool PumpRunning { get; set; }
         public bool AutoMode { get; set; }
+        public long CooldownRemaining { get; set; }
     }
 }

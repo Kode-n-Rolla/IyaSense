@@ -43,6 +43,19 @@ void onMessage(char* topic, byte* payload, unsigned int length) {
   Serial.print("Received command: ");
   Serial.println(command);
 
+  Serial.print("Auto mode: ");
+  Serial.println(autoMode);
+
+  Serial.print("Sensor ready: ");
+  Serial.println(sensorReady);
+
+  Serial.print("Pump running: ");
+  Serial.println(pumpRunning);
+
+  Serial.print("Cooldown remaining (ms): ");
+  unsigned long elapsed = millis() - lastPumpStopTime;
+  Serial.println(elapsed >= PUMP_COOLDOWN ? 0 : PUMP_COOLDOWN - elapsed);
+
   if (command == "MODE_MANUAL") {
     autoMode = false;
 
@@ -133,6 +146,12 @@ void loop() {
     soilMoisture = map(soilRaw, 0, 4095, 0, 100);
     sensorReady = true;
 
+    unsigned long elapsed = millis() - lastPumpStopTime;
+
+    unsigned long remaining = elapsed >= PUMP_COOLDOWN
+        ? 0
+        : PUMP_COOLDOWN - elapsed;
+
     JsonDocument doc;
 
     doc["temperature"] = data.temperature;
@@ -140,6 +159,7 @@ void loop() {
     doc["soilMoisture"] = soilMoisture;
     doc["pumpRunning"] = pumpRunning;
     doc["autoMode"] = autoMode;
+    doc["cooldownRemaining"] = remaining;
 
     String payload;
     serializeJson(doc, payload);

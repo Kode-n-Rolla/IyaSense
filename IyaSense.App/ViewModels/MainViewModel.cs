@@ -15,6 +15,7 @@ namespace IyaSense.App.ViewModels {
         private int _soilMoisture;
         private bool _pumpRunning;
         private bool _autoMode;
+        private long _cooldownRemaining;
         private readonly MqttService _mqttService;
         private static readonly JsonSerializerOptions _jsonOptions = new() {
             PropertyNameCaseInsensitive = true
@@ -25,6 +26,7 @@ namespace IyaSense.App.ViewModels {
         public string ModeToggleButtonText => AutoMode ? "Switch to Manual" : "Switch to Automatic";
         public string PumpToggleButtonText => PumpRunning ? "Stop Pump" : "Start Pump";
         public bool ManualModeEnabled => !AutoMode;
+        public string CooldownStatusText => CooldownRemaining > 0 ? $"Cooldown: {(CooldownRemaining + 999) / 1000}s" : "Cooldown: Ready";
 
         public string ConnectionStatusText {
             get => _connectionStatusText;
@@ -104,6 +106,19 @@ namespace IyaSense.App.ViewModels {
             }
         }
 
+        public long CooldownRemaining {
+            get => _cooldownRemaining;
+            set {
+                if (_cooldownRemaining == value) {
+                    return;
+                }
+
+                _cooldownRemaining = value;
+                OnPropertyChanged(nameof(CooldownRemaining));
+                OnPropertyChanged(nameof(CooldownStatusText));
+            }
+        }
+
         public ICommand ConnectCommand { get; }
         public ICommand ToggleModeCommand { get; }
         public ICommand TogglePumpCommand { get; }
@@ -153,6 +168,7 @@ namespace IyaSense.App.ViewModels {
                         SoilMoisture = data.SoilMoisture;
                         PumpRunning = data.PumpRunning;
                         AutoMode = data.AutoMode;
+                        CooldownRemaining = data.CooldownRemaining;
                     });
                 }
             } catch (JsonException ex) {
