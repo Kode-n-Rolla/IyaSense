@@ -36,6 +36,15 @@ namespace IyaSense.App.Services {
             System.Diagnostics.Debug.WriteLine("MQTT subscribed!");
         }
 
+        public async Task PublishAsync(string command) {
+            var message = new MqttApplicationMessageBuilder()
+                .WithTopic("growcare/my-id-12345/commands")
+                .WithPayload(command)
+                .Build();
+
+            await _client.PublishAsync(message);
+        }
+
         private Task OnMessageReceived(MqttApplicationMessageReceivedEventArgs e) {
             string message = e.ApplicationMessage.ConvertPayloadToString();
 

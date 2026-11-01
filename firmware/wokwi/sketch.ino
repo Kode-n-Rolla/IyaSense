@@ -16,6 +16,7 @@ int soilMoisture = 0;
 bool sensorReady = false;
 
 bool pumpRunning = false;
+bool autoMode = true;
 unsigned long lastPumpStopTime = 0;
 unsigned long pumpStartTime = 0;
 const unsigned long PUMP_COOLDOWN = 30000;
@@ -41,6 +42,29 @@ void onMessage(char* topic, byte* payload, unsigned int length) {
 
   Serial.print("Received command: ");
   Serial.println(command);
+
+  if (command == "MODE_MANUAL") {
+    autoMode = false;
+
+    if (pumpRunning) {
+        stopPump();
+    }
+  } else if (command == "MODE_AUTO") {
+      autoMode = true;
+
+      if (pumpRunning) {
+          stopPump();
+      }
+  } else if (command == "PUMP_START" &&
+         !autoMode &&
+         sensorReady &&
+         !pumpRunning &&
+         millis() - lastPumpStopTime >= PUMP_COOLDOWN) {
+
+      startPump();
+  } else if (command == "PUMP_STOP" && pumpRunning) {
+      stopPump();
+  }
 }
 
 void connectMqtt() {
@@ -56,6 +80,20 @@ void connectMqtt() {
       Serial.println("MQTT connection failed");
     }
   }
+}
+
+void startPump() {
+    pumpRunning = true;
+    pumpStartTime = millis();
+    digitalWrite(RELAY_PIN, HIGH);
+    Serial.println("Pump ON");
+}
+
+void stopPump() {
+    pumpRunning = false;
+    digitalWrite(RELAY_PIN, LOW);
+    lastPumpStopTime = millis();
+    Serial.println("Pump OFF");
 }
 
 void setup() {
@@ -100,6 +138,8 @@ void loop() {
     doc["temperature"] = data.temperature;
     doc["humidity"] = data.humidity;
     doc["soilMoisture"] = soilMoisture;
+    doc["pumpRunning"] = pumpRunning;
+    doc["autoMode"] = autoMode;
 
     String payload;
     serializeJson(doc, payload);
@@ -117,20 +157,15 @@ void loop() {
 
   // Stop pump after 5 seconds
   if (pumpRunning && millis() - pumpStartTime >= PUMP_DURATION) {
-    pumpRunning = false;
-    lastPumpStopTime = millis();
-    digitalWrite(RELAY_PIN, LOW);
-    Serial.println("Pump OFF");
+      stopPump();
   }
 
   if (sensorReady &&
     soilMoisture < 30 &&
     !pumpRunning &&
+    autoMode &&
     millis() - lastPumpStopTime >= PUMP_COOLDOWN) {
 
-    pumpRunning = true;
-    pumpStartTime = millis();
-    digitalWrite(RELAY_PIN, HIGH);
-    Serial.println("Pump ON");
+    startPump();
   }
 }

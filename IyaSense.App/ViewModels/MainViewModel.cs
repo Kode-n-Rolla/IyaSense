@@ -10,11 +10,21 @@ using System.Windows.Input;
 namespace IyaSense.App.ViewModels {
     public class MainViewModel : INotifyPropertyChanged {
         private string _connectionStatusText = "Status: Disconnected";
-        private string _lastMessage = "No messages received";
         private float _temperature;
         private float _humidity;
         private int _soilMoisture;
+        private bool _pumpRunning;
+        private bool _autoMode;
         private readonly MqttService _mqttService;
+        private static readonly JsonSerializerOptions _jsonOptions = new() {
+            PropertyNameCaseInsensitive = true
+        };
+
+        public string PumpStatusText => PumpRunning ? "Pump: ON" : "Pump: OFF";
+        public string ModeStatusText => AutoMode ? "Mode: Automatic" : "Mode: Manual";
+        public string ModeToggleButtonText => AutoMode ? "Switch to Manual" : "Switch to Automatic";
+        public string PumpToggleButtonText => PumpRunning ? "Stop Pump" : "Start Pump";
+        public bool ManualModeEnabled => !AutoMode;
 
         public string ConnectionStatusText {
             get => _connectionStatusText;
@@ -25,18 +35,6 @@ namespace IyaSense.App.ViewModels {
 
                 _connectionStatusText = value;
                 OnPropertyChanged(nameof(ConnectionStatusText));
-            }
-        }
-
-        public string LastMessage {
-            get => _lastMessage;
-            set {
-                if (_lastMessage == value) {
-                    return;
-                }
-
-                _lastMessage = value;
-                OnPropertyChanged(nameof(LastMessage));
             }
         }
 
@@ -77,12 +75,45 @@ namespace IyaSense.App.ViewModels {
             }
         }
 
+        public bool PumpRunning {
+            get => _pumpRunning;
+            set {
+                if (_pumpRunning == value) {
+                    return;
+                }
+
+                _pumpRunning = value;
+                OnPropertyChanged(nameof(PumpRunning));
+                OnPropertyChanged(nameof(PumpStatusText));
+                OnPropertyChanged(nameof(PumpToggleButtonText));
+            }
+        }
+
+        public bool AutoMode {
+            get => _autoMode;
+            set {
+                if (_autoMode == value) {
+                    return;
+                }
+
+                _autoMode = value;
+                OnPropertyChanged(nameof(AutoMode));
+                OnPropertyChanged(nameof(ModeStatusText));
+                OnPropertyChanged(nameof(ModeToggleButtonText));
+                OnPropertyChanged(nameof(ManualModeEnabled));
+            }
+        }
+
         public ICommand ConnectCommand { get; }
+        public ICommand ToggleModeCommand { get; }
+        public ICommand TogglePumpCommand { get; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public MainViewModel() {
             ConnectCommand = new AsyncRelayCommand(Connect);
+            ToggleModeCommand = new AsyncRelayCommand(ToggleMode);
+            TogglePumpCommand = new AsyncRelayCommand(TogglePump);
             _mqttService = new MqttService();
             _mqttService.MessageReceived += OnMessageReceived;
         }
@@ -112,26 +143,38 @@ namespace IyaSense.App.ViewModels {
         }
 
         private void OnMessageReceived(string message) {
-            //Application.Current.Dispatcher.BeginInvoke(() => {
-            //    LastMessage = message;
-            //});
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-
             try {
-                var data = JsonSerializer.Deserialize<SensorData>(message, options);
+                var data = JsonSerializer.Deserialize<SensorData>(message, _jsonOptions);
 
                 if (data != null) {
-                    Debug.WriteLine($"Temp: {data.Temperature}, Hum: {data.Humidity}");
                     Application.Current.Dispatcher.BeginInvoke(() => {
                         Temperature = data.Temperature;
                         Humidity = data.Humidity;
                         SoilMoisture = data.SoilMoisture;
+                        PumpRunning = data.PumpRunning;
+                        AutoMode = data.AutoMode;
                     });
                 }
             } catch (JsonException ex) {
                 Debug.WriteLine($"Invalid JSON: {ex.Message}");
             }
 
+        }
+
+        private async Task ToggleMode() {
+            if (AutoMode) {
+                await _mqttService.PublishAsync("MODE_MANUAL");
+            } else {
+                await _mqttService.PublishAsync("MODE_AUTO");
+            }
+        }
+
+        private async Task TogglePump() {
+            if (PumpRunning) {
+                await _mqttService.PublishAsync("PUMP_STOP");
+            } else {
+                await _mqttService.PublishAsync("PUMP_START");
+            }
         }
     }
 }
