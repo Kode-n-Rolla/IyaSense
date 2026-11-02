@@ -5,24 +5,221 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:IyaSense.App"
         mc:Ignorable="d"
-        Title="IyaSense" Height="600" Width="900" WindowStartupLocation="CenterScreen" FontFamily="Courier New">
-    <Grid>
-        <StackPanel Margin="30">
-            <TextBlock Text="IyaSense" FontSize="32" FontWeight="Bold" />
-            <TextBlock Text="Plant Monitoring System" FontSize="16" Margin="0,5,0,30"/>
-            <Button Content="{Binding ConnectionButtonText}" Width="120" Height="40" HorizontalAlignment="Left" Command="{Binding ConnectCommand}"/>
-            <TextBlock Text="{Binding ConnectionStatusText}" FontSize="16" Margin="0,10,0,0"/>
-            <TextBlock Text="{Binding Temperature, StringFormat='Temperature: {0:F1} °C'}" FontSize="16" Margin="0,10,0,0"/>
-            <TextBlock Text="{Binding Humidity, StringFormat='Humidity: {0:F1}%'}" FontSize="16" Margin="0,10,0,0"/>
-            <TextBlock Text="{Binding SoilMoisture, StringFormat='SoilMoisture: {0}%'}" FontSize="16" Margin="0,10,0,0"/>
-            <TextBlock Text="{Binding PumpStatusText}" FontSize="16" Margin="0,10,0,0"/>
-            <TextBlock Text="{Binding ModeStatusText}" FontSize="16" Margin="0,10,0,0"/>
-            <TextBlock Text="{Binding CooldownStatusText}" FontSize="16" Margin="0,10,0,0"/>
-            <TextBlock Text="{Binding DeviceStatusText}" FontSize="16" Margin="0,10,0,0"/>
-            <StackPanel Orientation="Horizontal" Margin="0,15,0,0">
-                <Button Content="{Binding ModeToggleButtonText}" Command="{Binding ToggleModeCommand}" IsEnabled="{Binding DeviceOnline}" Width="180" Height="35" Margin="0,0,10,0"/>
-                <Button Content="{Binding PumpToggleButtonText}" Command="{Binding TogglePumpCommand}" IsEnabled="{Binding ManualModeEnabled}" Width="180" Height="35"/>
+        Background="#111B19"
+        Foreground="#F1F7F3"
+        Title="IyaSense" Height="600" Width="900" WindowStartupLocation="CenterScreen" FontFamily="Segoe UI">
+    <Window.Resources>
+        <Style x:Key="ControlButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#314A3D"/>
+            <Setter Property="Foreground" Value="#F1F7F3"/>
+            <Setter Property="BorderBrush" Value="#577361"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="MinHeight" Value="36"/>
+            <Setter Property="Cursor" Value="Hand"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="6">
+
+                            <ContentPresenter
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Margin="{TemplateBinding Padding}"/>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                Property="Background"
+                                Value="#41634F"/>
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                Property="Background"
+                                Value="#263B30"/>
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#809187"/>
+                                <Setter TargetName="ButtonBorder"
+                                    Property="Background"
+                                    Value="#26352E"/>
+                                <Setter TargetName="ButtonBorder"
+                                    Property="Opacity"
+                                    Value="0.65"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Grid Margin="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="IyaSense"
+                   FontSize="32"
+                   FontWeight="Bold"
+                   Foreground="#F1F7F3"/>
+
+                <TextBlock Text="Plant Monitoring System"
+                   FontSize="16"
+                   Margin="0,5,0,0"
+                   Foreground="#9DB1A7"/>
             </StackPanel>
-        </StackPanel>
+
+            <StackPanel Grid.Column="1"
+                HorizontalAlignment="Right">
+
+                <TextBlock Text="{Binding ConnectionStatusText}"
+                   HorizontalAlignment="Right" Foreground="#9DB1A7"/>
+
+                <TextBlock Text="{Binding DeviceStatusText}"
+                   HorizontalAlignment="Right"
+                   Margin="0,5,0,0"
+                   Foreground="#9DB1A7"/>
+
+                <Button Content="{Binding ConnectionButtonText}"
+                    Command="{Binding ConnectCommand}"
+                    Width="120"
+                    Height="35"
+                    Margin="0,10,0,0"
+                    Style="{StaticResource ControlButtonStyle}"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Sensor cards -->
+        <Grid Grid.Row="1" Margin="0,20,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0"
+                Background="#20302A"
+                CornerRadius="12"
+                Padding="20"
+                Margin="0,0,10,0">
+
+                <StackPanel>
+                    <TextBlock Text="TEMPERATURE"
+                       Foreground="#AFC7B8"
+                       FontSize="16"/>
+
+                    <TextBlock Text="{Binding Temperature, StringFormat='{}{0:F1} °C'}"
+                       Foreground="White"
+                       FontSize="28"
+                       FontWeight="Bold"
+                       Margin="0,12,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1"
+                Background="#20302A"
+                CornerRadius="12"
+                Padding="20"
+                Margin="5,0,5,0">
+
+                <StackPanel>
+                    <TextBlock Text="AIR HUMIDITY"
+                       Foreground="#AFC7B8"
+                       FontSize="16"/>
+
+                    <TextBlock Text="{Binding Humidity, StringFormat='{}{0:F1}%'}"
+                       Foreground="White"
+                       FontSize="28"
+                       FontWeight="Bold"
+                       Margin="0,12,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="2"
+                Background="#20302A"
+                CornerRadius="12"
+                Padding="20"
+                Margin="10,0,0,0">
+
+                <StackPanel>
+                    <TextBlock Text="SOIL MOISTURE"
+                       Foreground="#AFC7B8"
+                       FontSize="16"/>
+
+                    <TextBlock Text="{Binding SoilMoisture, StringFormat='{}{0}%'}"
+                       Foreground="White"
+                       FontSize="28"
+                       FontWeight="Bold"
+                       Margin="0,12,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Irrigation control -->
+        <Border Grid.Row="2"
+            Background="#20302A"
+            CornerRadius="12"
+            Padding="20"
+            Margin="0,20,0,0"
+            VerticalAlignment="Top">
+
+            <StackPanel>
+                <TextBlock Text="IRRIGATION CONTROL" Foreground="#AFC7B8" FontSize="16" FontWeight="Bold"/>
+                <Grid Margin="0,20,0,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                       Text="{Binding PumpStatusText}"
+                       Foreground="White"
+                       FontSize="18"/>
+
+                    <TextBlock Grid.Column="1"
+                       Text="{Binding ModeStatusText}"
+                       Foreground="White"
+                       FontSize="18"/>
+
+                    <TextBlock Grid.Column="2"
+                       Text="{Binding CooldownStatusText}"
+                       Foreground="White"
+                       FontSize="18"/>
+                </Grid>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,0">
+                    <Button Content="{Binding ModeToggleButtonText}"
+                        Command="{Binding ToggleModeCommand}"
+                        IsEnabled="{Binding DeviceOnline}"
+                        Style="{StaticResource ControlButtonStyle}"
+                        Width="180" Height="35" Margin="0,0,10,0"/>
+
+                    <Button Content="{Binding PumpToggleButtonText}"
+                        Command="{Binding TogglePumpCommand}"
+                        IsEnabled="{Binding ManualModeEnabled}"
+                        Style="{StaticResource ControlButtonStyle}"
+                        Width="180" Height="35"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

@@ -12,6 +12,12 @@ IyaSense is an in-development IoT project combining an ESP32-based irrigation co
 
 **Current status:** Functional simulator-based prototype. The core monitoring and irrigation flows have passed manual functional checks in Wokwi and WPF. UI polish and release packaging remain. No physical pump or soil sensor has been validated. See [Testing](docs/TESTING.md) for the test matrix, evidence, and limitations.
 
+## Desktop Dashboard
+
+![IyaSense WPF Dashboard](docs/images/iyasense-ui.png)
+
+The WPF dashboard provides live sensor monitoring, irrigation mode switching, manual pump control, and cooldown tracking.
+
 ## Features
 
 - Live temperature and air-humidity monitoring using a simulated DHT22 sensor.
