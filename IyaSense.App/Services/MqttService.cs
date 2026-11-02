@@ -16,6 +16,9 @@ namespace IyaSense.App.Services {
             _client.DisconnectedAsync += OnDisconnected;
         }
 
+        /// <summary>
+        /// Establishes a connection to the MQTT broker.
+        /// </summary>
         public async Task ConnectAsync() {
             var options = new MqttClientOptionsBuilder()
                     .WithTcpServer("broker.hivemq.com", 1883)
@@ -30,7 +33,7 @@ namespace IyaSense.App.Services {
 
             var options = factory
                     .CreateSubscribeOptionsBuilder()
-                    .WithTopicFilter("growcare/my-id-12345/telemetry")
+                    .WithTopicFilter("iyasense/kode-n-rolla/demo-7f29c1/telemetry")
                     .Build();
 
             await _client.SubscribeAsync(options);
@@ -38,9 +41,13 @@ namespace IyaSense.App.Services {
             System.Diagnostics.Debug.WriteLine("MQTT subscribed!");
         }
 
+        /// <summary>
+        /// Publishes a command to the ESP32 controller.
+        /// </summary>
+        /// <param name="command">The command payload to send.</param>
         public async Task PublishAsync(string command) {
             var message = new MqttApplicationMessageBuilder()
-                .WithTopic("growcare/my-id-12345/commands")
+                .WithTopic("iyasense/kode-n-rolla/demo-7f29c1/commands")
                 .WithPayload(command)
                 .Build();
 

@@ -19,7 +19,7 @@ namespace IyaSense.App.Commands {
             try {
                 await ExecuteAsync();
             } catch (Exception ex) {
-                System.Diagnostics.Debug.WriteLine($"Command execution faild: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Command execution failed: {ex.Message}");
             }
         }
 

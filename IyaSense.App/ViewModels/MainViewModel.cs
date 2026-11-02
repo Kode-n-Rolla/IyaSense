@@ -19,6 +19,7 @@ namespace IyaSense.App.ViewModels {
         private long _cooldownRemaining;
         private DateTime _lastTelemetryReceived = DateTime.MinValue;
         private bool _deviceOnline;
+        private string _errorMessage = string.Empty;
         private readonly DispatcherTimer _deviceTimer;
         private readonly MqttService _mqttService;
         private static readonly JsonSerializerOptions _jsonOptions = new() {
@@ -139,6 +140,17 @@ namespace IyaSense.App.ViewModels {
             }
         }
 
+        public string ErrorMessage {
+            get => _errorMessage;
+            set {
+                if (_errorMessage == value) {
+                    return;
+                }
+
+                _errorMessage = value;
+                OnPropertyChanged(nameof(ErrorMessage));
+            }
+        }
 
         public ICommand ConnectCommand { get; }
         public ICommand ToggleModeCommand { get; }
@@ -161,7 +173,6 @@ namespace IyaSense.App.ViewModels {
 
             _deviceTimer.Tick += CheckDeviceStatus;
             _deviceTimer.Start();
-
         }
 
         private void OnPropertyChanged(string propertyName) {
@@ -188,44 +199,50 @@ namespace IyaSense.App.ViewModels {
 
         }
 
+        /// <summary>
+        /// Processes incoming sensor telemetry and updates the UI.
+        /// </summary>
         private void OnMessageReceived(string message) {
             try {
                 var data = JsonSerializer.Deserialize<SensorData>(message, _jsonOptions);
 
-                if (data != null) {
-                    Application.Current.Dispatcher.BeginInvoke(() => {
-                        Temperature = data.Temperature;
-                        Humidity = data.Humidity;
-                        SoilMoisture = data.SoilMoisture;
-                        PumpRunning = data.PumpRunning;
-                        AutoMode = data.AutoMode;
-                        CooldownRemaining = data.CooldownRemaining;
-                        _lastTelemetryReceived = DateTime.UtcNow;
-                        DeviceOnline = true;
-                    });
+                if (data == null ||
+                    !float.IsFinite(data.Temperature) ||
+                    !float.IsFinite(data.Humidity) ||
+                    data.Humidity < 0 || data.Humidity > 100 ||
+                    data.SoilMoisture < 0 || data.SoilMoisture > 100 ||
+                    data.CooldownRemaining < 0) {
+
+                    Debug.WriteLine("Invalid sensor telemetry");
+                    return;
                 }
+
+                Application.Current.Dispatcher.BeginInvoke(() => {
+                    Temperature = data.Temperature;
+                    Humidity = data.Humidity;
+                    SoilMoisture = data.SoilMoisture;
+                    PumpRunning = data.PumpRunning;
+                    AutoMode = data.AutoMode;
+                    CooldownRemaining = data.CooldownRemaining;
+                    _lastTelemetryReceived = DateTime.UtcNow;
+                    DeviceOnline = true;
+                });
             } catch (JsonException ex) {
                 Debug.WriteLine($"Invalid JSON: {ex.Message}");
             }
-
         }
 
         private async Task ToggleMode() {
-            if (AutoMode) {
-                await _mqttService.PublishAsync("MODE_MANUAL");
-            } else {
-                await _mqttService.PublishAsync("MODE_AUTO");
-            }
+            await SendCommandAsync(AutoMode ? "MODE_MANUAL" : "MODE_AUTO");
         }
 
         private async Task TogglePump() {
-            if (PumpRunning) {
-                await _mqttService.PublishAsync("PUMP_STOP");
-            } else {
-                await _mqttService.PublishAsync("PUMP_START");
-            }
+            await SendCommandAsync(PumpRunning ? "PUMP_STOP" : "PUMP_START");
         }
 
+        /// <summary>
+        /// Marks the device offline when telemetry becomes stale.
+        /// </summary>
         private void CheckDeviceStatus(object? sender, EventArgs e) {
             if (!DeviceOnline) {
                 return;
@@ -250,6 +267,22 @@ namespace IyaSense.App.ViewModels {
                 await _mqttService.DisconnectAsync();
             } else {
                 await Connect();
+            }
+        }
+
+        private async Task SendCommandAsync(string command) {
+            ErrorMessage = string.Empty;
+
+            if (!_mqttService.IsConnected || !DeviceOnline) {
+                ErrorMessage = "Device is not connected.";
+                return;
+            }
+
+            try {
+                await _mqttService.PublishAsync(command);
+            } catch (Exception ex) {
+                ErrorMessage = "Failed to send command.";
+                Debug.WriteLine($"MQTT publish failed: {ex.Message}");
             }
         }
     }

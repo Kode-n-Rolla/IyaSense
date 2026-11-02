@@ -28,8 +28,8 @@ const unsigned long MQTT_RECONNECT_INTERVAL = 5000;
 
 DHTesp dht;
 
-const char* telemetryTopic = "growcare/my-id-12345/telemetry";
-const char* commandTopic = "growcare/my-id-12345/commands";
+const char* telemetryTopic = "iyasense/kode-n-rolla/demo-7f29c1/telemetry";
+const char* commandTopic = "iyasense/kode-n-rolla/demo-7f29c1/commands";
 
 WiFiClient wifi;
 PubSubClient mqtt(wifi);
@@ -44,16 +44,6 @@ void onMessage(char* topic, byte* payload, unsigned int length) {
   Serial.print("Received command: ");
   Serial.println(command);
 
-  Serial.print("Auto mode: ");
-  Serial.println(autoMode);
-
-  Serial.print("Sensor ready: ");
-  Serial.println(sensorReady);
-
-  Serial.print("Pump running: ");
-  Serial.println(pumpRunning);
-
-  Serial.print("Cooldown remaining (ms): ");
   unsigned long elapsed = millis() - lastPumpStopTime;
   Serial.println(elapsed >= PUMP_COOLDOWN ? 0 : PUMP_COOLDOWN - elapsed);
 
@@ -87,7 +77,7 @@ void connectMqtt() {
 
     lastMqttAttemptTime = millis();
 
-    if (mqtt.connect("iyasense-esp32-12345")) {
+    if (mqtt.connect("iyasense-esp32-demo-7f29c1")) {
       Serial.println("MQTT connected!");
       mqtt.subscribe(commandTopic);
     } else {
@@ -96,6 +86,7 @@ void connectMqtt() {
   }
 }
 
+// Starts a watering cycle and records its start time.
 void startPump() {
     pumpRunning = true;
     pumpStartTime = millis();
@@ -103,6 +94,7 @@ void startPump() {
     Serial.println("Pump ON");
 }
 
+// Stops irrigation and starts the cooldown period.
 void stopPump() {
     pumpRunning = false;
     digitalWrite(RELAY_PIN, LOW);
