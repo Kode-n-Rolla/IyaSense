@@ -1,6 +1,6 @@
 # IyaSense
 
-![Status](https://img.shields.io/badge/status-in%20development-blue)
+![Status](https://img.shields.io/badge/status-v0.1.0-blue)
 ![Manual tests](https://img.shields.io/badge/manual%20tests-passed-brightgreen)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![.NET](https://img.shields.io/badge/.NET-10-512BD4)
@@ -8,9 +8,11 @@
 
 **IoT plant monitoring and automated irrigation with ESP32, MQTT, and C#/.NET WPF.**
 
-IyaSense is an in-development IoT project combining an ESP32-based irrigation controller with a Windows desktop dashboard. The controller reads environmental data, applies local watering rules, and publishes telemetry over MQTT. The WPF application displays live readings and sends commands to switch operating modes or control irrigation manually.
+IyaSense is a simulator-based IoT plant monitoring and automated irrigation system combining an ESP32 controller with a Windows desktop application built using C#/.NET and WPF.
 
-**Current status:** Functional simulator-based prototype. The core monitoring and irrigation flows have passed manual functional checks in Wokwi and WPF. UI polish and release packaging remain. No physical pump or soil sensor has been validated. See [Testing](docs/TESTING.md) for the test matrix, evidence, and limitations.
+The ESP32 collects environmental data, independently manages irrigation, and communicates with the desktop application over MQTT. The WPF dashboard provides live sensor readings, automatic/manual mode switching, pump control, and device connectivity monitoring.
+
+Current status: The core functionality is implemented and has passed manual end-to-end testing in Wokwi and WPF. The project is being prepared for its first release, v0.1.0. Physical irrigation hardware has not been tested.
 
 ## Desktop Dashboard
 
@@ -29,7 +31,9 @@ The WPF dashboard provides live sensor monitoring, irrigation mode switching, ma
 - Cooldown status displayed in the desktop app.
 - MQTT telemetry and command channels, with reconnect attempts on the ESP32.
 - Device Online/Offline detection using telemetry freshness; unavailable-device controls are disabled.
-- WPF Connect/Disconnect control and MQTT disconnect handling.
+- Incoming telemetry validation before updating device state.
+- MQTT command error handling with feedback in the desktop dashboard.
+- MQTT connection management with device availability tracking and disabled controls when offline.
 
 ## Architecture
 
@@ -50,8 +54,10 @@ The **ESP32 owns the irrigation decisions and run timers**. The desktop applicat
 
 | MQTT topic | Direction | Purpose |
 | --- | --- | --- |
-| `growcare/my-id-12345/telemetry` | ESP32 → WPF | Sensor readings, pump state, mode, cooldown |
-| `growcare/my-id-12345/commands` | WPF → ESP32 | `MODE_AUTO`, `MODE_MANUAL`, `PUMP_START`, `PUMP_STOP` |
+| `<topic-prefix>/telemetry` | ESP32 → WPF | Sensor readings, pump state, mode, cooldown |
+| `<topic-prefix>/commands` | WPF → ESP32 | `MODE_AUTO`, `MODE_MANUAL`, `PUMP_START`, `PUMP_STOP` |
+
+The topic prefix is configured in both the ESP32 firmware and the WPF MQTT service. Both components must use matching topics.
 
 ## Hardware simulation
 
@@ -84,6 +90,8 @@ The Wokwi source files are available in [`firmware/wokwi/`](firmware/wokwi/):
 
 Both components currently use the public HiveMQ broker at `broker.hivemq.com:1883`. The topic prefix and ESP32 client ID are hardcoded for demonstration purposes; change them if running your own instance to avoid collisions with other users of the public broker.
 
+> **Note:** The default MQTT broker is a public test service. Use a unique topic prefix and ESP32 client ID when running your own instance. The current MQTT setup does not provide authentication or encrypted transport.
+
 ## Testing
 
 Core irrigation and connection-management workflows were **manually tested** in Wokwi and the WPF desktop application. See **[docs/TESTING.md](docs/TESTING.md)** for scenarios, observed results, sample serial logs, and known gaps. The green badge above indicates *manual functional checks passed*, **not** an automated CI test suite or physical hardware validation.
@@ -97,13 +105,19 @@ Core irrigation and connection-management workflows were **manually tested** in 
 | Simulation | Wokwi |
 | Messaging | MQTT (HiveMQ public test broker) |
 
-## Limitations and next steps
+## Known limitations
 
-- **Simulation only:** the pump is represented by a relay; operation with physical irrigation hardware has not been tested.
-- **Safety:** network operations can still block parts of the controller loop. The five-second run limit is not a hard real-time or hardware safety guarantee. Do not connect a real pump without independent fail-safe protection and additional testing.
-- **Connection handling:** unexpected network loss, prolonged TCP stalls, and command rejection feedback are not fully covered; see the test report.
-- **UI and release:** final interface polish and demonstration materials are pending.
+- **Simulation only:** The project has been tested using virtual ESP32 components in Wokwi. No physical irrigation hardware has been validated.
+- **Safety:** The five-second pump limit is software-controlled and does not provide a hard real-time guarantee. Network operations may block execution. Physical deployment requires independent fail-safe protection.
+- **Connectivity:** Unexpected network failures and prolonged TCP stalls have not been exhaustively tested.
+- **MQTT:** The public test broker does not provide authenticated or encrypted communication in the current configuration. Commands may be rejected by the controller during cooldown without a dedicated rejection notification in the dashboard.
+
+See [Testing](docs/TESTING.md) for detailed test results and remaining verification gaps.
 
 ## Project status
 
-**In development — core simulation functionality manually tested; UI and release polish remaining.**
+**v0.1.0 — initial simulator-based MVP release.**
+
+Core functionality has passed manual end-to-end testing. The desktop dashboard, automated irrigation logic, manual pump control, cooldown handling, and device connectivity monitoring are implemented.
+
+The project is intended as a software engineering and IoT portfolio demonstration, not a production-ready physical irrigation controller.

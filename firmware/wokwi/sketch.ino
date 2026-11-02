@@ -86,7 +86,6 @@ void connectMqtt() {
   }
 }
 
-// Starts a watering cycle and records its start time.
 void startPump() {
     pumpRunning = true;
     pumpStartTime = millis();
@@ -94,7 +93,6 @@ void startPump() {
     Serial.println("Pump ON");
 }
 
-// Stops irrigation and starts the cooldown period.
 void stopPump() {
     pumpRunning = false;
     digitalWrite(RELAY_PIN, LOW);
