@@ -29,7 +29,7 @@ IyaSense is an in-development IoT project combining an ESP32-based irrigation co
        - live readings                      - DHT22 readings
        - mode and pump status               - analog soil input
        - control commands                   - irrigation rules
-                                             - relay output
+                                            - relay output
 ```
 
 The **ESP32 owns the irrigation decisions and run timers**. The desktop application sends requests and displays telemetry reported by the controller; it does not directly drive the relay.
@@ -47,9 +47,9 @@ The current setup runs in **Wokwi** and includes an ESP32, DHT22, potentiometer 
 
 The Wokwi source files are available in [`firmware/wokwi/`](firmware/wokwi/):
 
-- `sketch.ino` — firmware and irrigation logic
-- `diagram.json` — circuit wiring and components
-- `libraries.txt` — simulation dependencies
+- `sketch.ino` - firmware and irrigation logic
+- `diagram.json` - circuit wiring and components
+- `libraries.txt` - simulation dependencies
 
 ## Getting started
 
@@ -88,4 +88,4 @@ Both components currently use the public HiveMQ broker at `broker.hivemq.com:188
 
 ## Project status
 
-**In development — core functionality implemented, final reliability testing pending.**
+**In development - core functionality implemented, final reliability testing pending.**
