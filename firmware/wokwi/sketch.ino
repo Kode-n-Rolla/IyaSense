@@ -4,6 +4,7 @@
 #include <ArduinoJson.h>
 
 const char* broker = "broker.hivemq.com";
+
 const int port = 1883;
 const int DHT_PIN = 15;
 const int SOIL_PIN = 34;
@@ -131,6 +132,11 @@ void setup() {
 }
 
 void loop() {
+  // Stop pump after 5 seconds
+  if (pumpRunning && millis() - pumpStartTime >= PUMP_DURATION) {
+      stopPump();
+  }
+
   if (!mqtt.connected()) {
     connectMqtt();
   }
@@ -173,11 +179,6 @@ void loop() {
     } else {
       Serial.println("Publish failed!");
     }
-  }
-
-  // Stop pump after 5 seconds
-  if (pumpRunning && millis() - pumpStartTime >= PUMP_DURATION) {
-      stopPump();
   }
 
   if (sensorReady &&

@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace IyaSense.App.ViewModels {
     public class MainViewModel : INotifyPropertyChanged {
@@ -16,6 +17,9 @@ namespace IyaSense.App.ViewModels {
         private bool _pumpRunning;
         private bool _autoMode;
         private long _cooldownRemaining;
+        private DateTime _lastTelemetryReceived = DateTime.MinValue;
+        private bool _deviceOnline;
+        private readonly DispatcherTimer _deviceTimer;
         private readonly MqttService _mqttService;
         private static readonly JsonSerializerOptions _jsonOptions = new() {
             PropertyNameCaseInsensitive = true
@@ -25,8 +29,10 @@ namespace IyaSense.App.ViewModels {
         public string ModeStatusText => AutoMode ? "Mode: Automatic" : "Mode: Manual";
         public string ModeToggleButtonText => AutoMode ? "Switch to Manual" : "Switch to Automatic";
         public string PumpToggleButtonText => PumpRunning ? "Stop Pump" : "Start Pump";
-        public bool ManualModeEnabled => !AutoMode;
+        public bool ManualModeEnabled => !AutoMode && DeviceOnline;
         public string CooldownStatusText => CooldownRemaining > 0 ? $"Cooldown: {(CooldownRemaining + 999) / 1000}s" : "Cooldown: Ready";
+        public string DeviceStatusText => DeviceOnline ? "Device: Online" : "Device: Offline";
+        public string ConnectionButtonText => ConnectionStatusText == "Status: Connected" ? "Disconnect" : "Connect";
 
         public string ConnectionStatusText {
             get => _connectionStatusText;
@@ -37,6 +43,7 @@ namespace IyaSense.App.ViewModels {
 
                 _connectionStatusText = value;
                 OnPropertyChanged(nameof(ConnectionStatusText));
+                OnPropertyChanged(nameof(ConnectionButtonText));
             }
         }
 
@@ -118,6 +125,20 @@ namespace IyaSense.App.ViewModels {
                 OnPropertyChanged(nameof(CooldownStatusText));
             }
         }
+        public bool DeviceOnline {
+            get => _deviceOnline;
+            set {
+                if (_deviceOnline == value) {
+                    return;
+                }
+
+                _deviceOnline = value;
+                OnPropertyChanged(nameof(DeviceOnline));
+                OnPropertyChanged(nameof(DeviceStatusText));
+                OnPropertyChanged(nameof(ManualModeEnabled));
+            }
+        }
+
 
         public ICommand ConnectCommand { get; }
         public ICommand ToggleModeCommand { get; }
@@ -126,11 +147,21 @@ namespace IyaSense.App.ViewModels {
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public MainViewModel() {
-            ConnectCommand = new AsyncRelayCommand(Connect);
+            ConnectCommand = new AsyncRelayCommand(ToggleConnection);
             ToggleModeCommand = new AsyncRelayCommand(ToggleMode);
             TogglePumpCommand = new AsyncRelayCommand(TogglePump);
+
             _mqttService = new MqttService();
             _mqttService.MessageReceived += OnMessageReceived;
+            _mqttService.Disconnected += OnMqttDisconnected;
+
+            _deviceTimer = new DispatcherTimer {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+
+            _deviceTimer.Tick += CheckDeviceStatus;
+            _deviceTimer.Start();
+
         }
 
         private void OnPropertyChanged(string propertyName) {
@@ -169,6 +200,8 @@ namespace IyaSense.App.ViewModels {
                         PumpRunning = data.PumpRunning;
                         AutoMode = data.AutoMode;
                         CooldownRemaining = data.CooldownRemaining;
+                        _lastTelemetryReceived = DateTime.UtcNow;
+                        DeviceOnline = true;
                     });
                 }
             } catch (JsonException ex) {
@@ -190,6 +223,33 @@ namespace IyaSense.App.ViewModels {
                 await _mqttService.PublishAsync("PUMP_STOP");
             } else {
                 await _mqttService.PublishAsync("PUMP_START");
+            }
+        }
+
+        private void CheckDeviceStatus(object? sender, EventArgs e) {
+            if (!DeviceOnline) {
+                return;
+            }
+
+            TimeSpan elapsed = DateTime.UtcNow - _lastTelemetryReceived;
+
+            if (elapsed > TimeSpan.FromSeconds(10)) {
+                DeviceOnline = false;
+            }
+        }
+
+        private void OnMqttDisconnected() {
+            Application.Current.Dispatcher.BeginInvoke(() => {
+                ConnectionStatusText = "Status: Disconnected";
+                DeviceOnline = false;
+            });
+        }
+
+        private async Task ToggleConnection() {
+            if (_mqttService.IsConnected) {
+                await _mqttService.DisconnectAsync();
+            } else {
+                await Connect();
             }
         }
     }

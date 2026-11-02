@@ -6,12 +6,14 @@ namespace IyaSense.App.Services {
 
         public bool IsConnected => _client.IsConnected;
         public event Action<string>? MessageReceived;
+        public event Action? Disconnected;
 
         public MqttService() {
             var factory = new MqttClientFactory();
             _client = factory.CreateMqttClient();
 
             _client.ApplicationMessageReceivedAsync += OnMessageReceived;
+            _client.DisconnectedAsync += OnDisconnected;
         }
 
         public async Task ConnectAsync() {
@@ -53,6 +55,16 @@ namespace IyaSense.App.Services {
             System.Diagnostics.Debug.WriteLine($"MQTT received: {message}");
 
             return Task.CompletedTask;
+        }
+        private Task OnDisconnected(MqttClientDisconnectedEventArgs e) {
+            Disconnected?.Invoke();
+            return Task.CompletedTask;
+        }
+
+        public async Task DisconnectAsync() {
+            if (_client.IsConnected) {
+                await _client.DisconnectAsync();
+            }
         }
     }
 }

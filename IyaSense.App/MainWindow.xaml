@@ -10,7 +10,7 @@
         <StackPanel Margin="30">
             <TextBlock Text="IyaSense" FontSize="32" FontWeight="Bold" />
             <TextBlock Text="Plant Monitoring System" FontSize="16" Margin="0,5,0,30"/>
-            <Button Content="Connect" Width="120" Height="40" HorizontalAlignment="Left" Command="{Binding ConnectCommand}"/>
+            <Button Content="{Binding ConnectionButtonText}" Width="120" Height="40" HorizontalAlignment="Left" Command="{Binding ConnectCommand}"/>
             <TextBlock Text="{Binding ConnectionStatusText}" FontSize="16" Margin="0,10,0,0"/>
             <TextBlock Text="{Binding Temperature, StringFormat='Temperature: {0:F1} °C'}" FontSize="16" Margin="0,10,0,0"/>
             <TextBlock Text="{Binding Humidity, StringFormat='Humidity: {0:F1}%'}" FontSize="16" Margin="0,10,0,0"/>
@@ -18,8 +18,9 @@
             <TextBlock Text="{Binding PumpStatusText}" FontSize="16" Margin="0,10,0,0"/>
             <TextBlock Text="{Binding ModeStatusText}" FontSize="16" Margin="0,10,0,0"/>
             <TextBlock Text="{Binding CooldownStatusText}" FontSize="16" Margin="0,10,0,0"/>
+            <TextBlock Text="{Binding DeviceStatusText}" FontSize="16" Margin="0,10,0,0"/>
             <StackPanel Orientation="Horizontal" Margin="0,15,0,0">
-                <Button Content="{Binding ModeToggleButtonText}" Command="{Binding ToggleModeCommand}" Width="180" Height="35" Margin="0,0,10,0"/>
+                <Button Content="{Binding ModeToggleButtonText}" Command="{Binding ToggleModeCommand}" IsEnabled="{Binding DeviceOnline}" Width="180" Height="35" Margin="0,0,10,0"/>
                 <Button Content="{Binding PumpToggleButtonText}" Command="{Binding TogglePumpCommand}" IsEnabled="{Binding ManualModeEnabled}" Width="180" Height="35"/>
             </StackPanel>
         </StackPanel>
